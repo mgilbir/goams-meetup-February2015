@@ -1,0 +1,239 @@
+Go at a startup
+My experience after one year
+5 Feb 2015
+Tags: golang, go, startup, tips
+
+Miguel Eduardo Gil Biraud
+Freelance software developer
+miguel.gil.biraud@ieee.org
+https://franchu.net/
+@mgilbir
+
+* Disclaimer
+
+In this talk there won't be bashing of other programming languages. 
+Programming languages are just tools to solve problems. 
+If what you are using works for you, great! 
+Today I'll show you why we changed and why go is working great for us.
+
+* Outline
+
+- A bit of context
+- Problems
+- Why go?
+- Watch out for...
+- Things that we love
+- Things that we are starting to explore
+- Go is everywhere!
+
+* A bit of context
+
+The world of adverstising is really interesting. Seriously!
+
+It's full of interesting technical challenges:
+- Web scale (many requests/second)
+- Hard limit on response times (< 100ms)
+- Lots of moving pieces (distributed systems)
+- Targeting (big data, data science)
+- ... (insert buzzword and it probably applies)
+
+* How is an ad served?
+
+.image images/1-client.png 600 _
+
+* How is an ad served? (cont.)
+
+.image images/2-client_request.png 600 _
+
+* How is an ad served? (cont.)
+
+.image images/3-exchange_response.png 600 _
+
+
+* How is an ad served? (cont.)
+
+.image images/4-bidding_starts.png 600 _
+
+
+* How is an ad served? (cont.)
+
+.image images/5-bidding_response.png 600 _
+
+
+* How is an ad served? (cont.)
+
+.image images/6-win_notice.png 600 _
+
+
+* How is an ad served? (cont.)
+
+.image images/7-serve_ad.png 600 _
+
+
+* Behind the scenes
+
+.image images/8-adserver_simple.png 600 _
+
+
+* Behind the scenes (cont.)
+
+.image images/9-adserver_simple_timeline.png 600 _
+
+
+* Behind the scenes (cont.)
+
+.image images/10-adserver_complex.png 600 _
+
+* Behind the scenes (cont.)
+
+.image images/11-adserver_complex_timeline_seq.png 600 _
+
+* Behind the scenes (cont.)
+
+.image images/12-adserver_complex_timeline_seq_fail.png 600 _
+
+* Behind the scenes (cont.)
+
+.image images/13-adserver_complex_timeline_concurrent.png 600 _
+
+* Problems
+
+* When I arrived
+
+.image images/14-adserver_simple.png _ 400
+
+moving into...
+
+.image images/15-adserver_complex.png _ 600
+
+
+* When I arrived (cont.)
+
+.image images/16-adserver_simple_timeline.png _ 600
+
+but stuck with...
+
+.image images/17-adserver_complex_timeline_seq.png _ 600
+
+* Why go?
+
+The existing codebase was:
+- Written in non-async python
+- Lots of JSON manipulation
+- Almost no unit tests
+
+What we needed:
+- Concurrency
+- Safety in JSON manipulation
+
+Candidates:
+- python with greenlets, asyncio, ...
+- scala
+- go
+
+* Watch out for...
+
+* Things that will come to bite you
+
+Defer (part 1)
+
+.play code/deferorder/deferorder.go
+
+
+* Things that will come to bite you
+
+Defer (part 2)
+
+.play code/defereval/defereval.go
+
+* Things that will come to bite you
+You need to close the body of a HTTP request as described in `net/http`
+
+ defer req.Body.Close()
+
+If you want the connection to be reused, you need to read until EOF. If you don't care about the content:
+
+ io.Copy(ioutil.Discard, req.Body)
+
+* Things that will come to bite you
+
+Goroutine closures (part 1)
+
+.play code/goroutineclosureexit/goroutineclosureexit.go 
+
+* Things that will come to bite you
+
+Goroutine closures (part 2)
+
+.play code/goroutineclosurewaitgroup/goroutineclosurewaitgroup.go 
+
+* Things that will come to bite you
+
+Goroutine closures (part 3)
+
+.play code/goroutineclosure/goroutineclosure.go
+
+* Function pointer receivers
+
+.code code/pointerreceiver/pointerreceiver.go /START OMIT/,/END OMIT/
+.play code/pointerreceiver/pointerreceiver.go /func main/,/^}/
+
+* Things that we love
+
+* Things that we love
+
+Tooling:
+
+- go vet ./...
+
+- go test ./... -race
+
+
+Goroutines and channels:
+
+- They just work and you can have many of them
+
+Interfaces:
+
+- Completely different from other languages (eg. Java)
+- Don't start with interfaces. Let them appear organically
+
+Standard library:
+
+- It's awesome. We don't use many 3rd party packages
+
+* Things that we are starting to explore
+
+* Things that we are starting to explore
+
+go generate:
+
+- It's new in go 1.4 and even if it looks a bit weird, it solves a problem quite nicely.
+
+- While there are 3rd party packages that provide set implementations, we have our own implementation that does not depend on interfaces or reflection.
+
+docker for integration testing:
+
+- Run integration tests with docker
+
+* context
+Example by @dahean
+.link http://dahernan.github.io/2015/02/04/context-and-cancellation-of-goroutines/
+
+.code code/context/server/server.go /func LazyServer/,/^}/
+.play code/context/server/server.go /func main/,/^}/ 
+
+* context (cont.)
+
+.code code/context/client/client.go /START 1 OMIT/,/END 1 OMIT/
+
+
+* context (cont.)
+
+.code code/context/client/client.go /START 2 OMIT/,/END 2 OMIT/
+
+* context (cont.)
+
+.play code/context/client/client.go /func main/,/^}/
+
+* Go is everywhere
